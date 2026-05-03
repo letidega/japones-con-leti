@@ -1,27 +1,7 @@
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
-
-// --- IN-MEMORY DATABASE (Mocking SQL for Prototype) ---
-const db = {
-  users: [
-    { id: '1', nombre: 'Alumno Demo', email: 'demo@demo.com', password: 'password', plan: 'pro' }
-  ],
-  courses: [
-    { id: 'c1', titulo: 'Japonés desde Cero (Hiragana y Katakana)', nivel: 'N5', descripcion: 'Aprende los silabarios básicos del idioma japonés.', image: 'https://images.unsplash.com/photo-1570453342371-33230b809a47?auto=format&fit=crop&q=80&w=800' },
-    { id: 'c2', titulo: 'Gramática Básica', nivel: 'N5', descripcion: 'Estructuras fundamentales del japonés.', image: 'https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&q=80&w=800' },
-    { id: 'c3', titulo: 'Kanji Esencial N4', nivel: 'N4', descripcion: 'Los primeros 100 kanjis para defenderte.', image: 'https://images.unsplash.com/photo-1610024062304-49c09f8742fb?auto=format&fit=crop&q=80&w=800' }
-  ],
-  lessons: [
-    { id: 'l1', curso_id: 'c1', titulo: 'Introducción al Hiragana', contenido: 'El hiragana es el silabario básico. Hoy aprenderemos A, I, U, E, O.', orden: 1 },
-    { id: 'l2', curso_id: 'c1', titulo: 'Fila K (KA, KI, KU, KE, KO)', contenido: 'Continuamos con la segunda fila del hiragana.', orden: 2 },
-    { id: 'l3', curso_id: 'c1', titulo: 'Fila S (SA, SHI, SU, SE, SO)', contenido: 'Presta especial atención a SHI, se pronuncia diferente a lo esperado.', orden: 3 },
-  ],
-  progress: [
-    { usuario_id: '1', leccion_id: 'l1', completada: true, fecha: new Date().toISOString() },
-    { usuario_id: '1', leccion_id: 'l2', completada: false, fecha: new Date().toISOString() }
-  ]
-};
+import { supabase } from './supabase';
 
 async function startServer() {
   const app = express();
@@ -32,88 +12,160 @@ async function startServer() {
   // --- API ENDPOINTS ---
 
   // Auth endpoints
-  app.post('/api/auth/register', (req, res) => {
+  app.post('/api/auth/register', async (req, res) => {
     const { nombre, email, password } = req.body;
-    const existing = db.users.find(u => u.email === email);
-    if (existing) return res.status(400).json({ error: 'Email ya registrado' });
     
-    const newUser = { id: Date.now().toString(), nombre, email, password, plan: 'free' };
-    db.users.push(newUser);
-    res.json({ message: 'Usuario registrado', user: { id: newUser.id, nombre: newUser.nombre, email: newUser.email, plan: newUser.plan } });
+    // Using Supabase Auth for registration
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { nombre, plan: 'free' }
+      }
+    });
+
+    if (authError) return res.status(400).json({ error: authError.message });
+    
+    res.json({ 
+      message: 'Usuario registrado. Revisa tu email para confirmar.', 
+      user: { 
+        id: authData.user?.id, 
+        nombre, 
+        email, 
+        plan: 'free' 
+      } 
+    });
   });
 
-  app.post('/api/auth/login', (req, res) => {
+  app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
-    const user = db.users.find(u => u.email === email && u.password === password);
-    if (!user) return res.status(401).json({ error: 'Credenciales inválidas' });
     
-    res.json({ message: 'Login exitoso', token: 'mock-jwt-token-123', user: { id: user.id, nombre: user.nombre, email: user.email, plan: user.plan } });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) return res.status(401).json({ error: 'Credenciales inválidas' });
+    
+    res.json({ 
+      message: 'Login exitoso', 
+      token: data.session.access_token, 
+      user: { 
+        id: data.user.id, 
+        nombre: data.user.user_metadata.nombre, 
+        email: data.user.email, 
+        plan: data.user.user_metadata.plan || 'free' 
+      } 
+    });
   });
 
   // Courses
-  app.get('/api/courses', (req, res) => {
-    res.json(db.courses);
+  app.get('/api/courses', async (req, res) => {
+    const { data, error } = await supabase
+      .from('cursos')
+      .select('*');
+    
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
   });
 
-  app.get('/api/courses/:id', (req, res) => {
-    const course = db.courses.find(c => c.id === req.params.id);
-    if (!course) return res.status(404).json({ error: 'Curso no encontrado' });
+  app.get('/api/courses/:id', async (req, res) => {
+    const { data: course, error: courseError } = await supabase
+      .from('cursos')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (courseError || !course) return res.status(404).json({ error: 'Curso no encontrado' });
     
-    const courseLessons = db.lessons.filter(l => l.curso_id === req.params.id).sort((a, b) => a.orden - b.orden);
-    res.json({ ...course, lessons: courseLessons });
+    const { data: lessons, error: lessonsError } = await supabase
+      .from('lecciones')
+      .select('*')
+      .eq('curso_id', req.params.id)
+      .order('orden', { ascending: true });
+
+    if (lessonsError) return res.status(500).json({ error: lessonsError.message });
+    
+    res.json({ ...course, lessons });
   });
 
   // Lessons
-  app.get('/api/lessons/:id', (req, res) => {
-    const lesson = db.lessons.find(l => l.id === req.params.id);
-    if (!lesson) return res.status(404).json({ error: 'Lección no encontrada' });
-    res.json(lesson);
+  app.get('/api/lessons/:id', async (req, res) => {
+    const { data, error } = await supabase
+      .from('lecciones')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !data) return res.status(404).json({ error: 'Lección no encontrada' });
+    res.json(data);
   });
 
   // Progress
-  app.get('/api/progress/:userId', (req, res) => {
-    const userProgress = db.progress.filter(p => p.usuario_id === req.params.userId);
-    res.json(userProgress);
+  app.get('/api/progress/:userId', async (req, res) => {
+    const { data, error } = await supabase
+      .from('progreso')
+      .select('*')
+      .eq('usuario_id', req.params.userId);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
   });
 
-  app.post('/api/progress', (req, res) => {
+  app.post('/api/progress', async (req, res) => {
     const { usuario_id, leccion_id, completada } = req.body;
-    let prog = db.progress.find(p => p.usuario_id === usuario_id && p.leccion_id === leccion_id);
     
-    if (prog) {
-      prog.completada = completada;
-      prog.fecha = new Date().toISOString();
-    } else {
-      prog = { usuario_id, leccion_id, completada, fecha: new Date().toISOString() };
-      db.progress.push(prog);
-    }
-    res.json(prog);
+    const { data, error } = await supabase
+      .from('progreso')
+      .upsert({ 
+        usuario_id, 
+        leccion_id, 
+        completada, 
+        fecha: new Date().toISOString() 
+      }, {
+        onConflict: 'usuario_id,leccion_id'
+      })
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
   });
 
   // User Dashboard Aggregation
-  app.get('/api/user/dashboard/:userId', (req, res) => {
-    const user = db.users.find(u => u.id === req.params.userId);
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  app.get('/api/user/dashboard/:userId', async (req, res) => {
+    // Fetch user progress
+    const { data: userProgress, error: progressError } = await supabase
+      .from('progreso')
+      .select('*, lecciones(curso_id)')
+      .eq('usuario_id', req.params.userId);
 
-    const userProgress = db.progress.filter(p => p.usuario_id === req.params.userId);
+    if (progressError) return res.status(500).json({ error: progressError.message });
+
     const completedLessonsCount = userProgress.filter(p => p.completada).length;
     
-    // Calculate global progress based on all lessons (mock logic)
-    const totalLessonsCount = db.lessons.length;
-    const globalProgressPercentage = totalLessonsCount === 0 ? 0 : Math.round((completedLessonsCount / totalLessonsCount) * 100);
+    // Fetch all lessons to calculate global progress
+    const { count: totalLessonsCount, error: countError } = await supabase
+      .from('lecciones')
+      .select('*', { count: 'exact', head: true });
 
-    // Get current active courses
-    const activeCourseIds = [...new Set(userProgress.map(p => db.lessons.find(l => l.id === p.leccion_id)?.curso_id))].filter(Boolean);
-    const activeCourses = activeCourseIds.map(id => db.courses.find(c => c.id === id));
+    const globalProgressPercentage = totalLessonsCount === 0 ? 0 : Math.round((completedLessonsCount / (totalLessonsCount || 1)) * 100);
+
+    // Get active courses (mock logic translated to Supabase)
+    const activeCourseIds = [...new Set(userProgress.map(p => p.lecciones?.curso_id))].filter(Boolean);
+    
+    const { data: activeCourses, error: coursesError } = await supabase
+      .from('cursos')
+      .select('*')
+      .in('id', activeCourseIds);
 
     res.json({
-      user: { id: user.id, nombre: user.nombre, plan: user.plan },
       stats: {
         completedLessons: completedLessonsCount,
         globalProgress: globalProgressPercentage,
         achievements: completedLessonsCount >= 1 ? ['Primeros Pasos - 1 Lección'] : []
       },
-      activeCourses
+      activeCourses: activeCourses || []
     });
   });
 

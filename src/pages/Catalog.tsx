@@ -1,51 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Course } from "../types";
 
 type LevelFilter = "Todos" | "N5" | "N4";
 
-const courses = [
+const backupCourses: Course[] = [
   {
     id: "sakura",
-    levelId: "N5.1",
-    level: "N5",
-    icon: "eco",
-    title: "SAKURA (桜) - Fundamentos",
-    description: "Da tus primeros pasos en el idioma. Aprende Hiragana, Katakana y las estructuras gramaticales esenciales para presentaciones y rutinas diarias.",
-    duration: "12 semanas",
-    prerequisites: "Sin requisitos",
+    titulo: "SAKURA (桜) - Fundamentos",
+    nivel: "N5",
+    descripcion: "Da tus primeros pasos en el idioma. Aprende Hiragana, Katakana y las estructuras gramaticales esenciales para presentaciones y rutinas diarias.",
+    image: ""
   },
   {
     id: "kaze",
-    levelId: "N5.2",
-    level: "N5",
-    icon: "local_florist",
-    title: "KAZE (風) - Expresión Cotidiana",
-    description: "Siente la ligereza del idioma. Dominarás el Katakana y estructuras esenciales para expresarte con naturalidad en situaciones diarias, dejando atrás la rigidez.",
-    duration: "14 semanas",
-    prerequisites: "Requiere N5.1",
+    titulo: "KAZE (風) - Expresión Cotidiana",
+    nivel: "N5",
+    descripcion: "Siente la ligereza del idioma. Dominarás el Katakana y estructuras esenciales para expresarte con naturalidad en situaciones diarias, dejando atrás la rigidez.",
+    image: ""
   },
   {
     id: "michi",
-    levelId: "N4.1",
-    level: "N4",
-    icon: "water_drop",
-    title: "MICHI (道) - Transición Intermedio",
-    description: "Abre la puerta al japonés intermedio. Domina las formas verbales complejas (potencial, volitivo) y amplía tu vocabulario situacional.",
-    duration: "16 semanas",
-    prerequisites: "Requiere N5 Completo",
+    titulo: "MICHI (道) - Transición Intermedio",
+    nivel: "N4",
+    descripcion: "Abre la puerta al japonés intermedio. Domina las formas verbales complejas (potencial, volitivo) y amplía tu vocabulario situacional.",
+    image: ""
   }
 ];
 
 export function Catalog() {
+  const [courses, setCourses] = useState<Course[]>([]);
   const [activeFilter, setActiveFilter] = useState<LevelFilter>("Todos");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const response = await fetch('/api/courses');
+        const data = await response.json();
+        // Si hay datos en la DB, los usamos. Si no, usamos el backup.
+        setCourses(data.length > 0 ? data : backupCourses);
+      } catch (error) {
+        console.error("Error fetching courses, using backup:", error);
+        setCourses(backupCourses);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchCourses();
+  }, []);
 
   const filteredCourses = courses.filter((course) => {
-    const matchesFilter = activeFilter === "Todos" || course.level === activeFilter;
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          course.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = activeFilter === "Todos" || course.nivel === activeFilter;
+    const matchesSearch = course.titulo.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          course.descripcion.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex-grow flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <main className="flex-grow max-w-7xl mx-auto w-full px-8 py-16 flex flex-col gap-16 relative">
@@ -91,22 +110,22 @@ export function Catalog() {
           <article key={course.id} className="group relative bg-surface-container-low rounded-xl p-8 border border-outline-variant/20 hover:border-outline-variant/50 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col h-full overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-tertiary-container/30 to-transparent rounded-bl-full pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
             <div className="flex justify-between items-start mb-6 relative z-10">
-              <span className="px-3 py-1 rounded-full border border-outline-variant text-primary font-label-sm text-sm font-bold bg-background">{course.levelId}</span>
-              <span aria-hidden="true" className="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">{course.icon}</span>
+              <span className="px-3 py-1 rounded-full border border-outline-variant text-primary font-label-sm text-sm font-bold bg-background">{course.nivel}</span>
+              <span aria-hidden="true" className="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">eco</span>
             </div>
-            <h3 className="font-headline-md text-2xl font-semibold text-on-surface mb-3 relative z-10">{course.title}</h3>
+            <h3 className="font-headline-md text-2xl font-semibold text-on-surface mb-3 relative z-10">{course.titulo}</h3>
             <p className="font-body-md text-base text-on-surface-variant mb-8 flex-grow relative z-10">
-              {course.description}
+              {course.descripcion}
             </p>
             <div className="mt-auto flex flex-col gap-4 relative z-10">
               <div className="flex items-center gap-4 text-on-surface-variant/80 font-label-sm text-sm font-medium">
                 <div className="flex items-center gap-1.5">
                   <span aria-hidden="true" className="material-symbols-outlined text-[16px]">schedule</span>
-                  {course.duration}
+                  12 semanas
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span aria-hidden="true" className="material-symbols-outlined text-[16px]">menu_book</span>
-                  {course.prerequisites}
+                  Sin requisitos
                 </div>
               </div>
               <Link to={`/courses/${course.id}`} className="inline-flex items-center justify-between w-full mt-4 pt-4 border-t border-outline-variant/20 font-label-sm text-sm font-bold text-primary group-hover:text-on-surface transition-colors">

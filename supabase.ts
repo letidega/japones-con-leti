@@ -1,14 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-// En Vite para el navegador, se usa exclusivamente import.meta.env
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Hardcoding keys to ensure the project works immediately on Vercel for class delivery
+const supabaseUrl = "https://yfhssdijgcimhtrrrlkb.supabase.co"
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmaHNzZGlqZ2NpbWh0cnJybGtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2NzIzMTQsImV4cCI6MjA5MzI0ODMxNH0.CdtB1hD4CBXa7YQ3aT227Orzttz5Qa2qHY_MDfboB4E"
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('ERROR: No se han encontrado las variables de Supabase (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY). Asegúrate de añadirlas en Vercel.');
-}
-
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
-)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)

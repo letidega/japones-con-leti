@@ -1,4 +1,7 @@
-import { supabase } from "../supabase";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { DashboardStats } from "../types";
+import { supabase } from "../../supabase";
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardStats | null>(null);
@@ -53,6 +56,19 @@ export function Dashboard() {
     }
     fetchDashboardData();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex-grow flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const stats = data?.stats || { completedLessons: 0, globalProgress: 0, achievements: [] };
+  const activeCourses = data?.activeCourses || [];
+
+  const navItems = [
     { id: "dashboard", label: "Panel Principal", icon: "dashboard" },
     { id: "lecciones", label: "Lecciones", icon: "menu_book" },
     { id: "vocabulario", label: "Vocabulario", icon: "translate" },
@@ -69,240 +85,233 @@ export function Dashboard() {
               <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Tus Lecciones</h2>
               <p className="text-on-surface-variant italic">Continúa donde lo dejaste en tus cursos activos.</p>
             </header>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {activeCourses.map((course) => (
-                <div key={course.id} className="bg-surface-container rounded-xl p-6 border border-outline-variant/30 hover:shadow-lg transition-all">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="px-2 py-1 bg-primary/10 rounded text-[10px] text-primary font-bold">{course.nivel}</span>
-                    <h3 className="font-title-sm text-lg font-medium">{course.titulo}</h3>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-on-surface-variant flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[16px]">play_circle</span>
-                        Lección 1: Hiragana
+              {activeCourses.length > 0 ? (
+                activeCourses.map(course => (
+                  <Link 
+                    key={course.id} 
+                    to={`/courses/${course.id}`}
+                    className="bg-surface-container hover:bg-surface-container-high p-6 rounded-2xl border border-outline-variant transition-all group"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider border border-primary/20">
+                        Nivel {course.nivel}
                       </span>
-                      <Link to="/lessons/l1" className="text-primary font-bold hover:underline">Continuar</Link>
+                      <span className="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-on-surface-variant flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[16px]">lock</span>
-                        Lección 2: Saludos
-                      </span>
-                      <span className="text-outline text-[12px]">Bloqueado</span>
+                    <h3 className="font-title-lg text-xl font-bold text-on-surface mb-2">{course.titulo}</h3>
+                    <p className="text-on-surface-variant text-sm line-clamp-2 mb-4">{course.descripcion}</p>
+                    <div className="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
+                      <div className="bg-primary h-full w-[45%]" />
                     </div>
-                  </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="col-span-full py-12 text-center bg-surface-container-low rounded-3xl border border-dashed border-outline-variant">
+                  <p className="text-on-surface-variant">No tienes cursos activos todavía.</p>
+                  <Link to="/courses" className="text-primary font-bold hover:underline mt-2 inline-block">Explorar catálogo</Link>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         );
+
       case "vocabulario":
         return (
           <div className="flex flex-col gap-8 animate-in fade-in duration-500">
             <header className="mb-4">
-              <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Banco de Vocabulario</h2>
-              <p className="text-on-surface-variant">Palabras esenciales para tu nivel actual (N5).</p>
+              <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Vocabulario N5</h2>
+              <p className="text-on-surface-variant italic">Repasa las palabras más comunes del primer nivel.</p>
             </header>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {[
                 { jp: "ねこ", ro: "Neko", es: "Gato", type: "Sustantivo" },
                 { jp: "いぬ", ro: "Inu", es: "Perro", type: "Sustantivo" },
-                { jp: "みず", ro: "Mizu", es: "Agua", type: "Sustantivo" },
                 { jp: "たべる", ro: "Taberu", es: "Comer", type: "Verbo" },
-                { jp: "みる", ro: "Miru", es: "Ver / Mirar", type: "Verbo" },
-                { jp: "せんせい", ro: "Sensei", es: "Maestro", type: "Sustantivo" },
-                { jp: "さくら", ro: "Sakura", es: "Cerezo", type: "Sustantivo" },
-                { jp: "にほん", ro: "Nihon", es: "Japón", type: "Sustantivo" },
+                { jp: "みず", ro: "Mizu", es: "Agua", type: "Sustantivo" },
+                { jp: "にほん", ro: "Nihon", es: "Japón", type: "Lugar" },
+                { jp: "せんせい", ro: "Sensei", es: "Maestro", type: "Persona" },
+                { jp: "がくせい", ro: "Gakusei", es: "Estudiante", type: "Persona" },
+                { jp: "ともだち", ro: "Tomodachi", es: "Amigo", type: "Persona" },
               ].map((item, i) => (
-                <div key={i} className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/20 flex flex-col items-center text-center group hover:bg-primary-container/30 transition-colors">
-                  <span className="text-3xl font-bold text-on-surface mb-1 group-hover:scale-110 transition-transform">{item.jp}</span>
-                  <span className="text-sm font-bold text-primary mb-2 uppercase tracking-tighter">{item.ro}</span>
-                  <span className="text-base text-on-surface-variant border-t border-outline-variant/20 pt-2 w-full">{item.es}</span>
+                <div key={i} className="bg-white p-6 rounded-2xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow text-center">
+                  <div className="text-[10px] text-primary font-bold uppercase mb-2">{item.type}</div>
+                  <div className="text-3xl font-bold mb-1">{item.jp}</div>
+                  <div className="text-xs text-on-surface-variant italic mb-2">{item.ro}</div>
+                  <div className="text-sm font-medium border-t border-outline-variant pt-2 mt-2">{item.es}</div>
                 </div>
               ))}
             </div>
           </div>
         );
+
       case "gramatica":
         return (
           <div className="flex flex-col gap-8 animate-in fade-in duration-500">
             <header className="mb-4">
-              <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Apuntes de Gramática</h2>
-              <p className="text-on-surface-variant">Estructuras y partículas fundamentales.</p>
+              <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Guía de Gramática</h2>
+              <p className="text-on-surface-variant italic">Conceptos clave para construir tus primeras frases.</p>
             </header>
+            
             <div className="space-y-6">
               {[
-                { part: "は (Wa)", desc: "Marcador de Tema. Indica de qué estamos hablando.", ex: "Watashi wa Maria desu (Yo soy María)." },
-                { part: "が (Ga)", desc: "Marcador de Sujeto. Enfatiza el sujeto que realiza la acción.", ex: "Neko ga imasu (Hay un gato)." },
-                { part: "の (No)", desc: "Marcador de Posesión o Pertenencia.", ex: "Watashi no hon (Mi libro)." },
-                { part: "を (Wo)", desc: "Marcador de Objeto Directo.", ex: "Mizu wo nomu (Beber agua)." },
+                { title: "Partícula は (Wa)", desc: "Marca el tema de la oración. Indica de qué estamos hablando.", ex: "Watashi wa Leti desu (Yo soy Leti)" },
+                { title: "Partícula が (Ga)", desc: "Marca el sujeto. Se usa para enfatizar quién realiza la acción.", ex: "Inu ga imasu (Hay un perro)" },
+                { title: "Partícula の (No)", desc: "Indica posesión o relación entre sustantivos.", ex: "Sensei no hon (El libro del profesor)" },
+                { title: "Partícula を (Wo)", desc: "Marca el objeto directo de la oración (la acción recae sobre esto).", ex: "Mizu wo nomimasu (Bebo agua)" },
               ].map((item, i) => (
-                <div key={i} className="bg-surface-container rounded-xl p-6 border-l-4 border-primary shadow-sm">
-                  <h4 className="font-title-sm text-xl font-bold text-on-surface mb-2">{item.part}</h4>
-                  <p className="text-on-surface-variant mb-4">{item.desc}</p>
-                  <div className="bg-surface/50 p-3 rounded italic text-sm text-primary">
-                    <span className="font-bold not-italic">Ejemplo:</span> {item.ex}
+                <div key={i} className="bg-primary-container/30 p-6 rounded-2xl border border-primary/10">
+                  <h3 className="font-bold text-xl text-primary mb-2">{item.title}</h3>
+                  <p className="text-on-surface mb-3">{item.desc}</p>
+                  <div className="bg-white/50 p-3 rounded-lg border border-outline-variant text-sm italic">
+                    Ejemplo: <span className="font-medium text-on-surface">{item.ex}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         );
+
       case "caligrafia":
         return (
           <div className="flex flex-col gap-8 animate-in fade-in duration-500">
             <header className="mb-4">
               <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Taller de Caligrafía</h2>
-              <p className="text-on-surface-variant">El arte de escribir con equilibrio y fluidez.</p>
+              <p className="text-on-surface-variant italic">El orden de los trazos es el alma de la escritura.</p>
             </header>
-            <div className="bg-secondary-container/20 rounded-2xl p-8 border border-outline-variant/30 flex flex-col md:flex-row gap-8 items-center">
-              <div className="flex-1">
-                <h3 className="font-title-sm text-xl font-bold mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">history_edu</span>
-                  La Regla del Orden de Trazos
-                </h3>
-                <ul className="space-y-3 text-on-surface-variant">
-                  <li className="flex gap-3 items-start"><span className="text-primary font-bold">1.</span> De izquierda a derecha.</li>
-                  <li className="flex gap-3 items-start"><span className="text-primary font-bold">2.</span> De arriba hacia abajo.</li>
-                  <li className="flex gap-3 items-start"><span className="text-primary font-bold">3.</span> Horizontal antes que vertical.</li>
-                  <li className="flex gap-3 items-start"><span className="text-primary font-bold">4.</span> El centro antes que los lados en caracteres simétricos.</li>
-                </ul>
-              </div>
-              <div className="w-48 h-48 bg-white rounded-xl border border-outline-variant flex items-center justify-center relative group">
-                <span className="text-[120px] font-serif text-on-surface/10 absolute inset-0 flex items-center justify-center">永</span>
-                <span className="text-2xl font-bold text-primary animate-pulse">Próximamente</span>
+            
+            <div className="bg-surface-container rounded-3xl p-8 border border-outline-variant">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                  <h3 className="text-2xl font-bold mb-4">Reglas de Oro</h3>
+                  <ul className="space-y-4">
+                    <li className="flex gap-4">
+                      <span className="bg-primary text-on-primary w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold">1</span>
+                      <p className="text-on-surface">De izquierda a derecha.</p>
+                    </li>
+                    <li className="flex gap-4">
+                      <span className="bg-primary text-on-primary w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold">2</span>
+                      <p className="text-on-surface">De arriba hacia abajo.</p>
+                    </li>
+                    <li className="flex gap-4">
+                      <span className="bg-primary text-on-primary w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold">3</span>
+                      <p className="text-on-surface">Lo horizontal primero que lo vertical si se cruzan.</p>
+                    </li>
+                    <li className="flex gap-4">
+                      <span className="bg-primary text-on-primary w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold">4</span>
+                      <p className="text-on-surface">El trazo central antes que los laterales simétricos.</p>
+                    </li>
+                  </ul>
+                </div>
+                <div className="aspect-square bg-white rounded-2xl border-4 border-dashed border-outline-variant flex items-center justify-center relative">
+                  <div className="text-[120px] font-display text-outline-variant opacity-20">書</div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest bg-white px-4">Espacio de Práctica</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         );
+
       default:
         return (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 animate-in fade-in duration-500">
-            <section className="md:col-span-8 bg-surface-container rounded-xl p-8 flex items-center gap-8 border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-2 border-outline-variant bg-surface-dim flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[48px] text-primary">person</span>
-              </div>
-              <div className="flex-1">
-                <h1 className="font-headline-md text-3xl font-semibold text-on-surface mb-1">Konnichiwa, María</h1>
-                <p className="font-body-md text-base text-on-surface-variant mb-4">Tu progreso hacia la fluidez es constante como el fluir de un río.</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 h-2 bg-surface-dim rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: `${stats.globalProgress}%` }}></div>
-                  </div>
-                  <span className="font-label-sm text-sm font-bold text-primary">{stats.globalProgress}% Global</span>
-                </div>
-              </div>
-            </section>
+          <div className="flex flex-col gap-12 animate-in fade-in duration-700">
+            <header>
+              <h1 className="font-display-lg text-4xl md:text-5xl font-bold text-on-surface mb-2">
+                Bienvenido de nuevo
+              </h1>
+              <p className="text-on-surface-variant text-lg">Tu camino hacia el dominio del japonés continúa.</p>
+            </header>
 
-            <section className="md:col-span-4 bg-surface-container-high rounded-xl p-8 border border-outline-variant/30 flex flex-col justify-center shadow-sm">
-              <h3 className="font-title-sm text-xl font-medium text-on-surface mb-4">Estadísticas</h3>
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[20px]">local_fire_department</span>
-                  <span className="font-body-md text-base">Racha de estudio</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-primary-container p-6 rounded-3xl border border-primary/10">
+                <div className="text-primary font-bold text-[10px] uppercase tracking-widest mb-2">Lecciones Completadas</div>
+                <div className="text-4xl font-bold text-on-primary-container mb-1">{stats.completedLessons}</div>
+                <div className="text-xs text-on-primary-container/70">De todas las unidades disponibles</div>
+              </div>
+              <div className="bg-secondary-container p-6 rounded-3xl border border-secondary/10">
+                <div className="text-secondary font-bold text-[10px] uppercase tracking-widest mb-2">Progreso Global</div>
+                <div className="text-4xl font-bold text-on-secondary-container mb-1">{stats.globalProgress}%</div>
+                <div className="w-full bg-secondary/20 h-1 rounded-full mt-2">
+                  <div className="bg-secondary h-full rounded-full transition-all duration-1000" style={{ width: `${stats.globalProgress}%` }} />
                 </div>
-                <span className="font-label-sm text-sm font-bold text-primary">0 días</span>
               </div>
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[20px]">task_alt</span>
-                  <span className="font-body-md text-base">Lecciones completadas</span>
+              <div className="bg-surface-container-high p-6 rounded-3xl border border-outline-variant">
+                <div className="text-on-surface-variant font-bold text-[10px] uppercase tracking-widest mb-2">Logros</div>
+                <div className="flex gap-2 flex-wrap">
+                  {stats.achievements.length > 0 ? (
+                    stats.achievements.map((a, i) => (
+                      <span key={i} className="bg-on-surface text-surface text-[10px] font-bold px-2 py-1 rounded uppercase">{a}</span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-on-surface-variant italic">Comienza a estudiar para ganar insignias.</span>
+                  )}
                 </div>
-                <span className="font-label-sm text-sm font-bold text-primary">{stats.completedLessons}</span>
               </div>
-            </section>
-
-            <section className="md:col-span-7 bg-surface-container rounded-xl p-10 border border-outline-variant/30 shadow-sm">
-              <h2 className="font-headline-md text-2xl text-on-surface mb-6 border-b border-outline-variant pb-2 font-semibold">Cursos Activos</h2>
-              <div className="flex flex-col gap-6">
-                {activeCourses.map((course) => (
-                  <div key={course.id} className="group cursor-pointer">
-                    <div className="flex justify-between items-end mb-2">
-                      <div>
-                        <span className="inline-block px-2 py-1 bg-outline-variant/20 rounded-full font-label-sm text-[10px] text-on-surface-variant mb-1 font-bold">{course.nivel}</span>
-                        <h4 className="font-title-sm text-[18px] text-on-surface group-hover:text-primary transition-colors font-medium">{course.titulo}</h4>
-                      </div>
-                      <span className="font-label-sm text-sm font-bold text-on-surface-variant">50%</span>
-                    </div>
-                    <div className="h-1.5 bg-surface-dim rounded-full overflow-hidden">
-                      <div className="h-full bg-primary w-[50%] rounded-full"></div>
-                    </div>
-                  </div>
-                ))}
-                {activeCourses.length === 0 && (
-                  <div className="text-center py-4">
-                    <p className="text-on-surface-variant italic">No tienes cursos activos todavía. ¡Explora el catálogo!</p>
-                    <Link to="/courses" className="text-primary font-bold mt-2 inline-block">Ver Catálogo</Link>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section className="md:col-span-5 bg-surface-container-low rounded-xl p-10 border border-outline-variant/30 relative overflow-hidden shadow-sm">
-              <div className="absolute -right-10 -top-10 opacity-5 pointer-events-none">
-                <span className="material-symbols-outlined text-[150px]">auto_awesome</span>
-              </div>
-              <h2 className="font-headline-md text-2xl text-on-surface mb-6 border-b border-outline-variant pb-2 relative z-10 font-semibold">Logros Recientes</h2>
-              <div className="grid grid-cols-2 gap-4 relative z-10">
-                {stats.achievements.map((achievement, idx) => (
-                  <div key={idx} className="flex flex-col items-center text-center p-3 rounded-lg hover:bg-surface-variant/50 transition-colors">
-                    <div className="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center mb-2">
-                      <span className="material-symbols-outlined text-[24px]">stars</span>
-                    </div>
-                    <span className="font-label-sm text-sm font-bold text-on-surface mb-1">{achievement}</span>
-                  </div>
-                ))}
-                {stats.achievements.length === 0 && (
-                  <p className="col-span-2 text-center text-on-surface-variant italic">Aún no has desbloqueado logros.</p>
-                )}
-              </div>
-            </section>
-
-            <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
-              <section className="md:col-span-2 bg-surface-container rounded-xl p-6 border border-outline-variant/30 flex items-center gap-6 shadow-sm">
-                <div className="w-16 h-16 rounded-lg bg-primary-container text-primary flex flex-col items-center justify-center shrink-0">
-                  <span className="font-label-sm text-[12px] uppercase font-bold">Oct</span>
-                  <span className="font-title-sm text-[24px] font-bold">14</span>
-                </div>
-                <div>
-                  <h4 className="font-title-sm text-xl font-medium text-on-surface mb-1">Taller en Vivo: Partículas Esenciales</h4>
-                  <p className="font-body-md text-base text-on-surface-variant text-sm mb-2">Mañana, 18:00 hrs (Hora Madrid)</p>
-                  <a className="font-label-sm text-sm font-bold text-primary hover:underline underline-offset-4" href="#">Añadir al calendario</a>
-                </div>
-              </section>
-              
-              <section className="md:col-span-1 bg-surface-variant rounded-xl p-6 border border-outline-variant/30 flex flex-col justify-center items-center text-center hover:bg-surface-dim transition-colors cursor-pointer group shadow-sm">
-                <span className="material-symbols-outlined text-[32px] text-on-surface-variant mb-2 group-hover:scale-110 transition-transform duration-300">support_agent</span>
-                <h4 className="font-title-sm text-xl font-medium text-on-surface mb-1">¿Necesitas ayuda?</h4>
-                <p className="font-body-md text-[12px] text-on-surface-variant">Contacta con soporte docente</p>
-              </section>
             </div>
+
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="font-headline-md text-2xl font-bold text-on-surface">Cursos Activos</h2>
+                <Link to="/courses" className="text-primary font-bold text-sm hover:underline">Ver catálogo completo</Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {activeCourses.length > 0 ? (
+                  activeCourses.map(course => (
+                    <div key={course.id} className="bg-surface-container rounded-2xl p-6 border border-outline-variant flex gap-6 items-center">
+                      <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-primary text-3xl">menu_book</span>
+                      </div>
+                      <div className="flex-grow">
+                        <h3 className="font-title-lg text-lg font-bold text-on-surface">{course.titulo}</h3>
+                        <p className="text-on-surface-variant text-sm">Nivel {course.nivel}</p>
+                      </div>
+                      <Link to={`/courses/${course.id}`} className="p-2 hover:bg-surface-variant rounded-full transition-colors">
+                        <span className="material-symbols-outlined">arrow_forward_ios</span>
+                      </Link>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full py-8 text-center bg-surface-container-low rounded-2xl border border-dashed border-outline-variant italic text-on-surface-variant">
+                    No tienes cursos activos en este momento.
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         );
     }
   };
 
   return (
-    <div className="flex flex-1 max-w-7xl mx-auto w-full relative">
-      <aside className="hidden lg:flex flex-col bg-surface-container-lowest dark:bg-zinc-900 w-64 border-r border-outline-variant/20 fixed left-0 top-[73px] h-[calc(100vh-73px)] overflow-y-auto z-40">
-        <div className="p-8 border-b border-outline-variant/10">
-          <h2 className="font-display-lg font-bold text-on-surface text-xl tracking-tight">Tu Progreso</h2>
-          <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mt-1">Nivel Actual: {activeCourses[0]?.nivel || "N5"}</p>
+    <div className="flex-1 flex flex-col lg:flex-row min-h-screen bg-surface">
+      <aside className="w-full lg:w-64 bg-surface-container-low border-b lg:border-b-0 lg:border-r border-outline-variant flex flex-col shrink-0 lg:fixed lg:h-full z-20">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-on-primary font-bold">L</span>
+            </div>
+            <span className="font-bold text-on-surface tracking-tight">Panel de Control</span>
+          </div>
         </div>
-        <nav className="flex-1 py-6 px-4 space-y-2">
+        <nav className="flex-grow px-3">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-body-md text-base ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-300 ${
                 activeTab === item.id
-                  ? "bg-primary text-on-primary shadow-md translate-x-2"
-                  : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                  ? "bg-primary text-on-primary shadow-md translate-x-1"
+                  : "text-on-surface-variant hover:bg-surface-variant hover:text-on-surface"
               }`}
             >
-              <span className={`material-symbols-outlined ${activeTab === item.id ? "fill-1" : ""}`}>{item.icon}</span>
-              <span className="font-semibold">{item.label}</span>
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              <span className="font-label-sm text-sm font-bold uppercase tracking-wider">
+                {item.label}
+              </span>
             </button>
           ))}
         </nav>

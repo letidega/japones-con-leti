@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { supabase } from "../supabase";
+import { supabase } from "../../supabase";
 
 export function LessonView() {
   const { lessonId } = useParams();

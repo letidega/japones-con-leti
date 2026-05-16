@@ -1,4 +1,4 @@
-import { supabase } from "../supabase";
+import { supabase } from "../../supabase";
 
 export function Login() {
   const [isLogin, setIsLogin] = useState(true);

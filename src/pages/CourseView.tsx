@@ -36,7 +36,7 @@ const backupLessons: Record<string, Lesson[]> = {
   ]
 };
 
-import { supabase } from "../supabase";
+import { supabase } from "../../supabase";
 
 export function CourseView() {
   const { courseId } = useParams();

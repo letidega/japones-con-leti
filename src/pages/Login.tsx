@@ -1,4 +1,8 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogIn } from "lucide-react";
 import { supabase } from "../../supabase";
+import logo from "../assets/logo.png";
 
 export function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -44,7 +48,6 @@ export function Login() {
           <div className="flex justify-center mb-6">
             <img src={logo} alt="Japonés con Leti" className="h-32 w-auto" />
           </div>
-
 
           <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             {isLogin ? "Iniciar Sesión" : "Crear una cuenta"}

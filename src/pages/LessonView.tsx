@@ -1,8 +1,59 @@
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "../supabase";
 
 export function LessonView() {
+  const { lessonId } = useParams();
   const [completed, setCompleted] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkCompletion() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('progreso')
+        .select('completada')
+        .eq('usuario_id', user.id)
+        .eq('leccion_id', lessonId)
+        .maybeSingle();
+
+      if (data?.completada) {
+        setCompleted(true);
+      }
+      setLoading(false);
+    }
+    checkCompletion();
+  }, [lessonId]);
+
+  const handleComplete = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("Debes iniciar sesión para guardar tu progreso");
+      return;
+    }
+
+    const { error } = await supabase
+      .from('progreso')
+      .upsert({
+        usuario_id: user.id,
+        leccion_id: lessonId,
+        completada: true,
+        fecha: new Date().toISOString()
+      }, {
+        onConflict: 'usuario_id,leccion_id'
+      });
+
+    if (error) {
+      console.error("Error saving progress:", error);
+    } else {
+      setCompleted(true);
+    }
+  };
 
   return (
     <main className="flex-1 w-full pt-12 pb-24 px-6 md:px-16 max-w-4xl mx-auto">
@@ -25,26 +76,12 @@ export function LessonView() {
           El Hiragana (ひらがな) es el silabario nativo de Japón. Sus formas redondeadas evocan la caligrafía clásica. Comenzaremos con las cinco vocales esenciales, que forman la base de todos los demás sonidos.
         </p>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <div className="bg-surface-container rounded-xl p-6 flex flex-col items-center justify-center border border-outline-variant hover:border-outline transition-colors group">
-            <span className="font-display-lg text-5xl font-bold text-on-surface mb-2 group-hover:scale-110 transition-transform">あ</span>
-            <span className="font-label-sm text-sm font-bold text-on-surface-variant">a</span>
-          </div>
-          <div className="bg-surface-container rounded-xl p-6 flex flex-col items-center justify-center border border-outline-variant hover:border-outline transition-colors group">
-            <span className="font-display-lg text-5xl font-bold text-on-surface mb-2 group-hover:scale-110 transition-transform">い</span>
-            <span className="font-label-sm text-sm font-bold text-on-surface-variant">i</span>
-          </div>
-          <div className="bg-surface-container rounded-xl p-6 flex flex-col items-center justify-center border border-outline-variant hover:border-outline transition-colors group">
-            <span className="font-display-lg text-5xl font-bold text-on-surface mb-2 group-hover:scale-110 transition-transform">う</span>
-            <span className="font-label-sm text-sm font-bold text-on-surface-variant">u</span>
-          </div>
-          <div className="bg-surface-container rounded-xl p-6 flex flex-col items-center justify-center border border-outline-variant hover:border-outline transition-colors group">
-            <span className="font-display-lg text-5xl font-bold text-on-surface mb-2 group-hover:scale-110 transition-transform">え</span>
-            <span className="font-label-sm text-sm font-bold text-on-surface-variant">e</span>
-          </div>
-          <div className="bg-surface-container rounded-xl p-6 flex flex-col items-center justify-center border border-outline-variant hover:border-outline transition-colors group">
-            <span className="font-display-lg text-5xl font-bold text-on-surface mb-2 group-hover:scale-110 transition-transform">お</span>
-            <span className="font-label-sm text-sm font-bold text-on-surface-variant">o</span>
-          </div>
+          {['あ', 'い', 'う', 'え', 'お'].map((char, i) => (
+            <div key={char} className="bg-surface-container rounded-xl p-6 flex flex-col items-center justify-center border border-outline-variant hover:border-outline transition-colors group">
+              <span className="font-display-lg text-5xl font-bold text-on-surface mb-2 group-hover:scale-110 transition-transform">{char}</span>
+              <span className="font-label-sm text-sm font-bold text-on-surface-variant">{['a', 'i', 'u', 'e', 'o'][i]}</span>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -74,37 +111,33 @@ export function LessonView() {
           Selecciona el saludo correcto para la mañana. Tómate tu tiempo.
         </p>
         <div className="space-y-4">
-          <label className="flex items-center p-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-surface-container transition-all cursor-pointer group">
-            <input className="text-primary focus:ring-primary h-5 w-5 mr-4 border-outline" name="exercise1" type="radio" />
-            <div className="flex-1">
-              <span className="font-display-lg text-xl font-medium block mb-1">こんにちは</span>
-              <span className="font-body-md text-sm font-bold text-on-surface-variant">Konnichiwa</span>
-            </div>
-          </label>
-          <label className="flex items-center p-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-surface-container transition-all cursor-pointer group">
-            <input className="text-primary focus:ring-primary h-5 w-5 mr-4 border-outline" name="exercise1" type="radio" />
-            <div className="flex-1">
-              <span className="font-display-lg text-xl font-medium block mb-1">おはようございます</span>
-              <span className="font-body-md text-sm font-bold text-on-surface-variant">Ohayou gozaimasu</span>
-            </div>
-          </label>
-          <label className="flex items-center p-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-surface-container transition-all cursor-pointer group">
-            <input className="text-primary focus:ring-primary h-5 w-5 mr-4 border-outline" name="exercise1" type="radio" />
-            <div className="flex-1">
-              <span className="font-display-lg text-xl font-medium block mb-1">こんばんは</span>
-              <span className="font-body-md text-sm font-bold text-on-surface-variant">Konbanwa</span>
-            </div>
-          </label>
+          {[
+            { jp: "こんにちは", ro: "Konnichiwa" },
+            { jp: "おはようございます", ro: "Ohayou gozaimasu" },
+            { jp: "こんばんは", ro: "Konbanwa" }
+          ].map((ex) => (
+            <label key={ex.jp} className="flex items-center p-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-surface-container transition-all cursor-pointer group">
+              <input className="text-primary focus:ring-primary h-5 w-5 mr-4 border-outline" name="exercise1" type="radio" />
+              <div className="flex-1">
+                <span className="font-display-lg text-xl font-medium block mb-1">{ex.jp}</span>
+                <span className="font-body-md text-sm font-bold text-on-surface-variant">{ex.ro}</span>
+              </div>
+            </label>
+          ))}
         </div>
       </section>
 
       <div className="mt-16 pt-8 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-6">
-        <Link to="/courses/c1" className="font-label-sm text-sm font-bold text-on-surface-variant hover:text-primary flex items-center gap-2 transition-colors">
+        <Link to="/dashboard" className="font-label-sm text-sm font-bold text-on-surface-variant hover:text-primary flex items-center gap-2 transition-colors">
           <span className="material-symbols-outlined text-sm">arrow_back</span>
-          Volver al temario
+          Volver al panel
         </Link>
         <div className="flex items-center gap-4">
-          <button onClick={() => setCompleted(true)} disabled={completed} className={`font-label-sm text-sm font-bold px-8 py-3 rounded-full transition-all flex items-center gap-2 shadow-sm ${completed ? 'bg-secondary text-white' : 'bg-primary text-on-primary hover:bg-surface-tint'}`}>
+          <button 
+            onClick={handleComplete} 
+            disabled={completed || loading} 
+            className={`font-label-sm text-sm font-bold px-8 py-3 rounded-full transition-all flex items-center gap-2 shadow-sm ${completed ? 'bg-secondary text-white' : 'bg-primary text-on-primary hover:bg-surface-tint'}`}
+          >
             <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
             {completed ? '¡Completado!' : 'Marcar como completada'}
           </button>

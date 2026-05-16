@@ -1,19 +1,50 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { DashboardStats } from "../types";
+import { supabase } from "../supabase";
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
-  const userId = "00000000-0000-0000-0000-000000000000"; // Dummy ID for guest/initial testing
 
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        const response = await fetch(`/api/user/dashboard/${userId}`);
-        const result = await response.json();
-        setData(result);
+        // 1. Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+           setIsLoading(false);
+           return;
+        }
+
+        // 2. Fetch progress
+        const { data: progress } = await supabase
+          .from('progreso')
+          .select('*, lecciones(curso_id)')
+          .eq('usuario_id', user.id);
+
+        const completedCount = progress?.filter(p => p.completada).length || 0;
+
+        // 3. Fetch total lessons count
+        const { count: totalLessons } = await supabase
+          .from('lecciones')
+          .select('*', { count: 'exact', head: true });
+
+        const progressPercent = totalLessons ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+        // 4. Get active courses
+        const activeIds = [...new Set(progress?.map(p => p.lecciones?.curso_id))].filter(Boolean);
+        const { data: courses } = await supabase
+          .from('cursos')
+          .select('*')
+          .in('id', activeIds);
+
+        setData({
+          stats: {
+            completedLessons: completedCount,
+            globalProgress: progressPercent,
+            achievements: completedCount >= 1 ? ['Primeros Pasos - 1 Lección'] : []
+          },
+          activeCourses: courses || []
+        });
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -22,19 +53,6 @@ export function Dashboard() {
     }
     fetchDashboardData();
   }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex-grow flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  const stats = data?.stats || { completedLessons: 0, globalProgress: 0, achievements: [] };
-  const activeCourses = data?.activeCourses || [];
-
-  const navItems = [
     { id: "dashboard", label: "Panel Principal", icon: "dashboard" },
     { id: "lecciones", label: "Lecciones", icon: "menu_book" },
     { id: "vocabulario", label: "Vocabulario", icon: "translate" },

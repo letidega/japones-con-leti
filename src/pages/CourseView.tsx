@@ -36,6 +36,8 @@ const backupLessons: Record<string, Lesson[]> = {
   ]
 };
 
+import { supabase } from "../supabase";
+
 export function CourseView() {
   const { courseId } = useParams();
   const [course, setCourse] = useState<Course | null>(null);
@@ -45,11 +47,28 @@ export function CourseView() {
   useEffect(() => {
     async function fetchCourseDetails() {
       try {
-        const response = await fetch(`/api/courses/${courseId}`);
-        if (!response.ok) throw new Error("Course not found in DB");
-        const data = await response.json();
-        setCourse(data);
-        setLessons(data.lessons && data.lessons.length > 0 ? data.lessons : (backupLessons[courseId || ""] || []));
+        // Fetch course details
+        const { data: courseData, error: courseError } = await supabase
+          .from('cursos')
+          .select('*')
+          .eq('id', courseId)
+          .single();
+
+        if (courseError || !courseData) throw new Error("Course not found in DB");
+        setCourse(courseData);
+
+        // Fetch lessons for this course
+        const { data: lessonsData, error: lessonsError } = await supabase
+          .from('lecciones')
+          .select('*')
+          .eq('curso_id', courseId)
+          .order('orden', { ascending: true });
+
+        if (!lessonsError && lessonsData && lessonsData.length > 0) {
+          setLessons(lessonsData);
+        } else {
+          setLessons(backupLessons[courseId || ""] || []);
+        }
       } catch (error) {
         console.warn("Course not found in DB, checking backup...");
         const backup = backupCourses.find(c => c.id === courseId);

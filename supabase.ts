@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
+// Intentamos obtener las variables de Vite (navegador) o de process.env (Node)
+const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  // En desarrollo local fuera de Vercel puede que necesitemos cargar .env.local
-  // Pero en Vercel las variables ya están en process.env
-  if (typeof window === 'undefined') {
-    console.warn('Missing Supabase environment variables');
+  if (typeof window !== 'undefined') {
+    console.warn('Supabase configuration missing! Check your environment variables.');
   }
 }
 

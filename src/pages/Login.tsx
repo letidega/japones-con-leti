@@ -1,8 +1,4 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { LogIn } from "lucide-react";
-
-import logo from "../assets/logo.png";
+import { supabase } from "../supabase";
 
 export function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,27 +12,28 @@ export function Login() {
     e.preventDefault();
     setError("");
 
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-    const body = isLogin ? { email, password } : { nombre: name, email, password };
-
     try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Ocurrió un error.");
-        return;
+      if (isLogin) {
+        const { error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (loginError) throw loginError;
+      } else {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { nombre: name, plan: 'free' }
+          }
+        });
+        if (signUpError) throw signUpError;
+        alert("¡Registro exitoso! Por favor, verifica tu correo electrónico.");
       }
 
-      // In a real app we'd save the token and set auth context here.
-      // For this prototype, we immediately send the user to the dashboard.
       navigate('/dashboard');
-    } catch (err) {
-      setError("Error de conexión con el servidor.");
+    } catch (err: any) {
+      setError(err.message || "Error al intentar conectar con el servidor.");
     }
   };
 

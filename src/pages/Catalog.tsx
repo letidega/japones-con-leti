@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Course } from "../types";
+import { supabase } from "../../supabase";
 
 type LevelFilter = "Todos" | "N5" | "N4";
 
@@ -37,10 +38,13 @@ export function Catalog() {
   useEffect(() => {
     async function fetchCourses() {
       try {
-        const response = await fetch('/api/courses');
-        const data = await response.json();
-        // Si hay datos en la DB, los usamos. Si no, usamos el backup.
-        setCourses(data.length > 0 ? data : backupCourses);
+        const { data, error } = await supabase
+          .from('cursos')
+          .select('*')
+          .order('id', { ascending: true });
+
+        if (error) throw error;
+        setCourses(data && data.length > 0 ? data : backupCourses);
       } catch (error) {
         console.error("Error fetching courses, using backup:", error);
         setCourses(backupCourses);

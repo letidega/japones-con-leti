@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Course } from "../types";
-import { supabase } from "../../supabase";
+import { supabase } from "../supabase";
 
 type LevelFilter = "Todos" | "N5" | "N4";
 
@@ -57,8 +57,8 @@ export function Catalog() {
 
   const filteredCourses = courses.filter((course) => {
     const matchesFilter = activeFilter === "Todos" || course.nivel === activeFilter;
-    const matchesSearch = course.titulo.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          course.descripcion.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = course.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.descripcion.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -82,10 +82,10 @@ export function Catalog() {
       <section className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center bg-surface-container rounded-xl p-6 border border-outline-variant/30">
         <div className="relative w-full md:w-96">
           <span aria-hidden="true" className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-[45%] text-outline text-[18px]">search</span>
-          <input 
-            className="w-full bg-background border-b border-outline-variant focus:border-primary focus:outline-none px-12 py-3 rounded-t-lg transition-colors font-body-md text-base text-on-surface placeholder:text-outline/70" 
-            placeholder="Buscar cursos, temas o kanji..." 
-            type="text" 
+          <input
+            className="w-full bg-background border-b border-outline-variant focus:border-primary focus:outline-none px-12 py-3 rounded-t-lg transition-colors font-body-md text-base text-on-surface placeholder:text-outline/70"
+            placeholder="Buscar cursos, temas o kanji..."
+            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -93,15 +93,15 @@ export function Catalog() {
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto mt-4 md:mt-0">
           <span className="font-label-sm text-sm font-bold text-on-surface-variant">Filtrar por nivel:</span>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => setActiveFilter("Todos")}
               className={`px-4 py-2 rounded-full font-label-sm text-sm font-bold transition-colors ${activeFilter === "Todos" ? "bg-primary text-on-primary hover:bg-primary/90" : "border border-outline-variant text-on-surface-variant hover:bg-surface-variant"}`}
             >Todos</button>
-            <button 
+            <button
               onClick={() => setActiveFilter("N5")}
               className={`px-4 py-2 rounded-full font-label-sm text-sm font-bold transition-colors ${activeFilter === "N5" ? "bg-primary text-on-primary hover:bg-primary/90" : "border border-outline-variant text-on-surface-variant hover:bg-surface-variant"}`}
             >N5</button>
-            <button 
+            <button
               onClick={() => setActiveFilter("N4")}
               className={`px-4 py-2 rounded-full font-label-sm text-sm font-bold transition-colors ${activeFilter === "N4" ? "bg-primary text-on-primary hover:bg-primary/90" : "border border-outline-variant text-on-surface-variant hover:bg-surface-variant"}`}
             >N4</button>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogIn } from "lucide-react";
-import { supabase } from "../../supabase";
+import { supabase } from "../supabase";
 import logo from "../assets/logo.png";
 
 export function Login() {
@@ -69,7 +69,7 @@ export function Login() {
               {error}
             </div>
           )}
-          
+
           {!isLogin && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
@@ -115,9 +115,9 @@ export function Login() {
             {isLogin ? "Entrar" : "Crear cuenta"}
             <LogIn className="w-4 h-4" />
           </button>
-          
+
           {isLogin && <div className="text-center mt-4">
-              <span className="text-xs text-slate-400">Demo User: demo@demo.com / password</span>
+            <span className="text-xs text-slate-400">Demo User: demo@demo.com / password</span>
           </div>}
         </form>
       </div>

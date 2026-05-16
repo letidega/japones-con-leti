@@ -36,7 +36,7 @@ const backupLessons: Record<string, Lesson[]> = {
   ]
 };
 
-import { supabase } from "../../supabase";
+import { supabase } from "../supabase";
 
 export function CourseView() {
   const { courseId } = useParams();
@@ -101,12 +101,12 @@ export function CourseView() {
       </div>
     );
   }
-  
+
   return (
     <main className="flex-grow flex flex-col relative w-full max-w-7xl mx-auto">
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-no-repeat bg-contain bg-top opacity-[0.03] pointer-events-none z-[-1]" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCBCTcBG-8uqj_78fWQATXwSHnDHTVKnF_1Q-po5t1ktmV1ytXHFQMoy0tUTWOsYBihKQ2AJkGauyKgrGf1msywe997VJmRraLD5rYxAU_WuttlrZytdC9H8cerseI1lHA7AZVgGDS8KdGqYzGxje1Aq6rp6LFKEJhBJBCzoIls46N1F6Mh6aj3Tm5Ie6mC27VK-w3VEr2UUA87Lwv2swQcQ96KXww8Fh0zLDQSh_ZINF6Msg5DcBm0HaGY6qm1vAm7FHKd8M9Y3r4')"}}>
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-no-repeat bg-contain bg-top opacity-[0.03] pointer-events-none z-[-1]" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCBCTcBG-8uqj_78fWQATXwSHnDHTVKnF_1Q-po5t1ktmV1ytXHFQMoy0tUTWOsYBihKQ2AJkGauyKgrGf1msywe997VJmRraLD5rYxAU_WuttlrZytdC9H8cerseI1lHA7AZVgGDS8KdGqYzGxje1Aq6rp6LFKEJhBJBCzoIls46N1F6Mh6aj3Tm5Ie6mC27VK-w3VEr2UUA87Lwv2swQcQ96KXww8Fh0zLDQSh_ZINF6Msg5DcBm0HaGY6qm1vAm7FHKd8M9Y3r4')" }}>
       </div>
-            <section className="w-full px-8 pt-[120px] pb-16 relative overflow-hidden">
+      <section className="w-full px-8 pt-[120px] pb-16 relative overflow-hidden">
         <div className="absolute left-8 top-[80px] text-[240px] leading-none font-display-lg text-primary-fixed-dim opacity-10 pointer-events-none select-none -z-10 tracking-tighter font-bold">
           {course.titulo.charAt(0)}
         </div>
@@ -145,7 +145,7 @@ export function CourseView() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
               <div className="flex items-start gap-4">
                 <div className="bg-surface p-2 rounded-full mt-1">
-                  <span className="material-symbols-outlined text-primary" style={{fontVariationSettings: "'FILL' 0"}}>draw</span>
+                  <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>draw</span>
                 </div>
                 <div>
                   <h3 className="font-title-sm text-xl font-medium text-on-surface mb-1">Hiragana y Katakana</h3>
@@ -154,7 +154,7 @@ export function CourseView() {
               </div>
               <div className="flex items-start gap-4">
                 <div className="bg-surface p-2 rounded-full mt-1">
-                  <span className="material-symbols-outlined text-primary" style={{fontVariationSettings: "'FILL' 0"}}>waving_hand</span>
+                  <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>waving_hand</span>
                 </div>
                 <div>
                   <h3 className="font-title-sm text-xl font-medium text-on-surface mb-1">Saludos (Aisatsu)</h3>
@@ -165,7 +165,7 @@ export function CourseView() {
           </div>
           <div className="bg-primary-container rounded-xl p-10 flex flex-col gap-4 relative overflow-hidden group border border-outline-variant/30">
             <div className="absolute -right-5 -top-5 opacity-10 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
-              <span className="material-symbols-outlined text-[140px] text-primary" style={{fontVariationSettings: "'FILL' 0"}}>spa</span>
+              <span className="material-symbols-outlined text-[140px] text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>spa</span>
             </div>
             <h3 className="font-title-sm text-xl font-medium text-on-primary-container relative z-10">El Método Leti</h3>
             <p className="font-body-md text-base text-on-surface-variant relative z-10 border-b border-outline-variant/30 pb-4">

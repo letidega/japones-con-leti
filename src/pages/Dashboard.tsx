@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { DashboardStats } from "../types";
-import { supabase } from "../../supabase";
+import { supabase } from "../supabase";
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardStats | null>(null);
@@ -14,8 +14,8 @@ export function Dashboard() {
         // 1. Get current user
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-           setIsLoading(false);
-           return;
+          setIsLoading(false);
+          return;
         }
 
         // 2. Fetch progress
@@ -85,12 +85,12 @@ export function Dashboard() {
               <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Tus Lecciones</h2>
               <p className="text-on-surface-variant italic">Continúa donde lo dejaste en tus cursos activos.</p>
             </header>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {activeCourses.length > 0 ? (
                 activeCourses.map(course => (
-                  <Link 
-                    key={course.id} 
+                  <Link
+                    key={course.id}
                     to={`/courses/${course.id}`}
                     className="bg-surface-container hover:bg-surface-container-high p-6 rounded-2xl border border-outline-variant transition-all group"
                   >
@@ -124,7 +124,7 @@ export function Dashboard() {
               <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Vocabulario N5</h2>
               <p className="text-on-surface-variant italic">Repasa las palabras más comunes del primer nivel.</p>
             </header>
-            
+
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {[
                 { jp: "ねこ", ro: "Neko", es: "Gato", type: "Sustantivo" },
@@ -154,7 +154,7 @@ export function Dashboard() {
               <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Guía de Gramática</h2>
               <p className="text-on-surface-variant italic">Conceptos clave para construir tus primeras frases.</p>
             </header>
-            
+
             <div className="space-y-6">
               {[
                 { title: "Partícula は (Wa)", desc: "Marca el tema de la oración. Indica de qué estamos hablando.", ex: "Watashi wa Leti desu (Yo soy Leti)" },
@@ -181,7 +181,7 @@ export function Dashboard() {
               <h2 className="font-headline-md text-3xl font-semibold text-on-surface mb-2">Taller de Caligrafía</h2>
               <p className="text-on-surface-variant italic">El orden de los trazos es el alma de la escritura.</p>
             </header>
-            
+
             <div className="bg-surface-container rounded-3xl p-8 border border-outline-variant">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
@@ -302,11 +302,10 @@ export function Dashboard() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-300 ${
-                activeTab === item.id
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-300 ${activeTab === item.id
                   ? "bg-primary text-on-primary shadow-md translate-x-1"
                   : "text-on-surface-variant hover:bg-surface-variant hover:text-on-surface"
-              }`}
+                }`}
             >
               <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
               <span className="font-label-sm text-sm font-bold uppercase tracking-wider">

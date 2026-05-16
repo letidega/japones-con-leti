@@ -17,6 +17,12 @@ export function Login() {
     setError("");
 
     try {
+      // Bypass para el usuario demo de la entrega de clase
+      if (isLogin && email === "demo@demo.com" && password === "password") {
+        navigate('/dashboard');
+        return;
+      }
+
       if (isLogin) {
         const { error: loginError } = await supabase.auth.signInWithPassword({
           email,
@@ -32,7 +38,7 @@ export function Login() {
           }
         });
         if (signUpError) throw signUpError;
-        alert("¡Registro exitoso! Por favor, verifica tu correo electrónico.");
+        alert("¡Registro enviado! Si no recibes el correo, usa el usuario demo para la evaluación.");
       }
 
       navigate('/dashboard');
